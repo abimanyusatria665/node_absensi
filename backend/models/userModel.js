@@ -6,28 +6,58 @@ const { DataTypes } = Sequelize;
 const users = db.define(
   "users",
   {
-    name: {
+    nama: {
       type: DataTypes.STRING,
-    },
-    email: {
-      type: DataTypes.STRING,
-    },
-    no_telepon: {
-      type: DataTypes.STRING,
-    },
-    jenis_kelamin: {
-      type: DataTypes.STRING,
-    },
-    password: {
-      type: DataTypes.STRING,
-    },
-    refresh_token: {
-      type: DataTypes.TEXT,
-    },
+      allowNull: false,
+      validate:{
+          notEmpty: true,
+          len:[3, 100]    
+      }
   },
-  {
-    freezeTableName: true,
+  email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate:{
+          notEmpty: true,
+          isEmail: true
+      }
+  },
+  password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate:{
+          notEmpty: true,
+          len:[8, 100]
+      }
+  },
+  role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate:{
+          notEmpty: true
+      }
+  },
+  no_telepon: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate:{
+          notEmpty: true,
+          len: [12, 100]
+      }
+  },
+  jenis_kelamin: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate:{
+          notEmpty: true
+      }
+  },
+  refresh_token: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
-);
+}, {
+  freezeTableName: true
+})
 
 export default users

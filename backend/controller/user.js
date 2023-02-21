@@ -5,16 +5,108 @@ import jwt from "jsonwebtoken";
 export const getUsers = async (req, res) => {
   try {
     const user = await users.findAll({
-      attributes:['id', 'name', 'email']
-    });
+      attributes: ['nama', 'email', 'no_telepon', 'jenis_kelamin', 'role']
+      });
     res.json(user);
   } catch (error) {
     console.log(error);
   }
 };
 
+export const getUsersById = async(req, res) => {
+  try{ 
+      const response = await users.findOne({
+          where: {
+              id: req.params.id
+          },
+          attributes: ['nama', 'email', 'no_telepon', 'jenis_kelamin', 'role']
+      })
+      res.status(200).json(response)
+  }catch (error){
+      res.status(500).json({
+          message: error.message
+      })
+  }
+}
+
+export const updateUsers = async(req, res) => {
+  const user = await users.findOne({
+      where: {
+          id: req.params.id
+      }
+  })
+
+  if(!user){
+      return res.status(404).json({
+          message: "User tidak ditemukan"
+      })
+  }
+  const {nama, email, password, confPassword, no_telepon, jenis_kelamin, role} = req.body 
+  let hashPassword
+  if(password  === "" || password === null){
+      hashPassword = user.password
+  }
+
+  if(password !== confPassword){
+      return res.status(400).json({
+          message: "Password dan Confirm Password tidak cocok  "
+      })
+  }
+
+  try{
+      await users.update({
+          nama: nama,
+          email: email,
+          password: hashPassword,
+          no_telepon: no_telepon,
+          jenis_kelamin: jenis_kelamin,
+          role: role
+      }, {
+          where:{
+              id: user.id
+          }
+      })
+      res.status(201).json({
+          message: "User updated"
+      })
+  }catch (error){
+      res.status(400).json({
+          message: error.message
+      })
+  }
+}
+
+export const deleteUsers = async (req, res) => {
+  const user = await users.findOne({
+      where: {
+          id: req.params.id
+      }
+  })
+
+  if(!user){
+      return res.status(404).json({
+          message: "User tidak ditemukan"
+      })
+  }
+
+  try{
+      await users.destroy({
+          where:{
+              id: user.id
+          }
+      })
+      res.status(200).json({
+          message: "User deleted"
+      })
+  }catch (error){
+      res.status(400).json({
+          message: error.message
+      })
+  }
+}
+
 export const register = async (req, res) => {
-  const { name, email, password, confPassword } = req.body;
+  const { nama,  email, password, confPassword, no_telepon, jenis_kelamin, role } = req.body;
   if (password !== confPassword)
     return res
       .status(400)
@@ -23,9 +115,12 @@ export const register = async (req, res) => {
   const hashPassword = await bcrypt.hash(password, salt);
   try {
     await users.create({
-      name: name,
-      email: email,
-      password: hashPassword,
+            nama: nama,
+            email: email,
+            password: hashPassword,
+            no_telepon: no_telepon,
+            jenis_kelamin: jenis_kelamin,
+            role: role
     });
     res.json({
       message: "register berhasil!",
@@ -41,22 +136,15 @@ export const login = async (req, res) => {
 
     // req.body.email
 
-    console.log(reqEmail);
-    const user = await users.findOne({
+      const user = await users.findOne({
       where: {
         email: reqEmail,
       },
     });
     const { id, name, email, password } = user;
 
-    console.log(user.id);
     const match = await bcrypt.compare(reqPassword, password);
     if (!match) return res.status(400).json({ message: "User not found!" });
-    console.log(match);
-    // res.body({ user: JSON.stringify(user) });
-    // const userId = user[0].id;
-    // const name = user[0].name;
-    // const email = user[0].email;
     const accessToken = jwt.sign(
       { id, name, email },
       process.env.ACCESS_TOKEN_SECRET,
